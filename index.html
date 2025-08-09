@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt: The Code Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes rotate {
+            to {
+                --angle: 360deg;
+            }
+        }
+        
+        @keyframes border-flash-success {
+            0%, 100% { box-shadow: 0 0 0px #10b981; }
+            50% { box-shadow: 0 0 20px 5px #10b981; }
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #111827; }
+        .font-tech { font-family: 'Share Tech Mono', monospace; }
+        .text-glow { text-shadow: 0 0 8px rgba(52, 211, 153, 0.7), 0 0 15px rgba(52, 211, 153, 0.5); }
+        .custom-input { caret-color: #34d399; }
+        
+        .page-container {
+            display: grid;
+        }
+        .page { 
+            grid-area: 1 / 1;
+            transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+        }
+        
+        /* Transition States */
+        .hidden-page { opacity: 0; pointer-events: none; }
+        .hide-default { transform: scale(0.98); }
+        .hide-slide-left { transform: translateX(-100px) scale(0.98); }
+        .hide-slide-up { transform: translateY(-50px) scale(0.98); }
+        .visible-page { opacity: 1; pointer-events: auto; transform: scale(1) translateX(0) translateY(0); }
+
+        @keyframes fadeInOut { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        .splash-animation { animation: fadeInOut 3s ease-in-out forwards; }
+        
+        .hub-button { 
+            @apply bg-gray-800/60 border border-gray-700 p-6 rounded-lg text-left transition-all duration-300 ease-in-out; 
+        }
+        .hub-button:hover {
+            @apply -translate-y-2;
+        }
+        .hub-button:hover .font-tech {
+             text-shadow: 0 0 12px rgba(250, 204, 21, 0.8); /* yellow-400 glow */
+        }
+
+        .disabled-button { @apply opacity-50 cursor-not-allowed; }
+        .disabled-button:hover { 
+            @apply border-gray-700 translate-y-0;
+        }
+        .disabled-button:hover .font-tech {
+            text-shadow: none;
+        }
+
+        .glowing-button {
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+        }
+
+        .animated-glowing-border {
+            position: relative;
+            border-radius: 1.1rem; /* Match the inner container's rounding */
+            z-index: 1;
+        }
+        .animated-glowing-border::before, .intensified-glow::before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            top: -2px; left: -2px;
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            background-image: conic-gradient(from var(--angle), #8b5cf6, #eab308, #22c55e, #3b82f6, #8b5cf6);
+            border-radius: inherit;
+            animation: rotate 6s linear infinite;
+        }
+        .intensified-glow::before {
+            top: -4px; left: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
+            animation-duration: 4s;
+            filter: brightness(0.8);
+        }
+
+        .flash-success {
+            animation: border-flash-success 0.8s ease-in-out;
+        }
+
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, transparent 120px, rgba(0, 0, 0, 0.98) 320px);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body class="text-gray-200 flex items-center justify-center min-h-screen">
+
+    <div id="spotlight"></div>
+
+    <div class="page-container relative w-full max-w-4xl mx-auto p-4">
+
+        <!-- Splash Screen -->
+        <div id="splash-screen" class="page visible-page w-full max-w-4xl mx-auto text-center">
+            <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-emerald-400 text-glow font-tech splash-animation">ACCESSING MAINFRAME...</h1>
+        </div>
+        
+        <!-- Title Screen -->
+        <div id="title-page" class="page hidden-page hide-default">
+            <div class="animated-glowing-border intensified-glow">
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8 text-center">
+                    <h1 class="text-5xl sm:text-7xl md:text-8xl font-bold text-emerald-400 text-glow font-tech">DECRYPT</h1>
+                    <p class="text-gray-400 text-lg sm:text-xl mt-2 mb-8">The code game that hasn't been beaten</p>
+                    <button id="continue-btn" class="w-full max-w-xs mx-auto bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 rounded-lg text-lg font-tech">CLICK TO CONTINUE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="page hidden-page hide-default">
+            <div class="animated-glowing-border">
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech mb-4 text-center">AGENT IDENTIFICATION</h1>
+                    <p class="text-center text-gray-400 mb-8">Enter your callsign or proceed as a guest.</p>
+                    <div class="space-y-4 max-w-sm mx-auto">
+                        <input type="text" id="player-name-input" placeholder="ENTER CALLSIGN..." class="custom-input font-tech w-full bg-gray-900 border-2 border-gray-700 rounded-lg p-4 text-lg uppercase text-center">
+                        <button id="start-agent-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 rounded-lg text-lg font-tech">BEGIN MISSION</button>
+                        <button id="start-guest-btn" class="w-full bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-3 rounded-lg text-lg font-tech">PROCEED AS GUEST</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mission Control Hub -->
+        <div id="mission-hub" class="page hidden-page hide-default">
+            <div class="animated-glowing-border">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <div class="flex justify-between items-start mb-4">
+                        <div id="badge-showcase" class="flex gap-2">
+                            <!-- Showcase badges appear here -->
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech text-center flex-grow">MISSION CONTROL</h1>
+                    </div>
+                    <p id="hub-welcome-message" class="text-center text-gray-400 mb-8">Select your operation, Agent. Your score: <span id="hub-score">0</span></p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button id="campaign-btn" class="hub-button">
+                            <h2 class="text-xl font-bold text-emerald-400 font-tech transition-all">MAIN CAMPAIGN</h2>
+                            <p class="text-gray-400 mt-1">Continue the legendary 100-level challenge. Current Level: <span id="hub-level">1</span></p>
+                        </button>
+                        <button id="practice-btn" class="hub-button">
+                            <h2 class="text-xl font-bold text-emerald-400 font-tech transition-all">PRACTICE RANGE</h2>
+                            <p class="text-gray-400 mt-1">Hone your skills with randomly generated puzzles for points.</p>
+                        </button>
+                        <button id="store-btn" class="hub-button">
+                            <h2 class="text-xl font-bold text-emerald-400 font-tech transition-all">THE BLACK MARKET</h2>
+                            <p class="text-gray-400 mt-1">Spend your points on hints, tools, and cosmetic upgrades.</p>
+                        </button>
+                        <button id="create-btn" class="hub-button">
+                            <h2 class="text-xl font-bold text-emerald-400 font-tech transition-all">CODE FORGE</h2>
+                            <p id="forge-status" class="text-gray-400 mt-1">Create your own encrypted messages to challenge other agents.</p>
+                        </button>
+                        <button id="profile-btn" class="hub-button md:col-span-2">
+                            <h2 class="text-xl font-bold text-emerald-400 font-tech transition-all">AGENT PROFILE</h2>
+                            <p class="text-gray-400 mt-1">View your stats, inventory, and earned badges.</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Container -->
+        <div id="game-wrapper" class="page hidden-page hide-default">
+            <div id="game-container" class="w-full mx-auto bg-gray-900 rounded-2xl">
+                <header class="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-emerald-400 text-glow font-tech">DECRYPT</h1>
+                        <p id="game-mode-subtitle" class="text-xs sm:text-sm text-gray-400">Mission in Progress...</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right text-sm sm:text-lg">
+                            <div id="level-display" class="font-bold font-tech">LEVEL: <span>1</span></div>
+                            <div id="score-display" class="font-bold font-tech">SCORE: <span>0</span></div>
+                        </div>
+                        <button id="menu-btn" class="bg-gray-700 hover:bg-red-800/50 text-red-400 font-bold py-2 px-4 rounded-lg transition font-tech">MENU</button>
+                    </div>
+                </header>
+                <main class="p-4 sm:p-6">
+                    <div id="puzzle-container" class="bg-gray-800/50 p-6 rounded-lg border border-gray-700 mb-6 text-center min-h-[150px]">
+                        <h2 id="puzzle-title" class="text-lg font-semibold text-gray-400 mb-4"></h2>
+                        <p id="puzzle-content" class="text-xl sm:text-3xl text-emerald-300 font-tech tracking-widest break-words"></p>
+                        <p id="puzzle-hint" class="text-sm text-gray-500 mt-4 italic invisible"></p>
+                    </div>
+                    <div id="input-section" class="flex flex-col sm:flex-row items-center gap-4">
+                        <button id="skeleton-key-btn" title="Use Skeleton Key" class="hidden w-16 h-16 bg-gray-700 hover:bg-purple-700 text-purple-400 font-bold p-3 rounded-lg transition-transform transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full"><path d="M13.5 6.22222V5C13.5 3.62222 14.6222 2.5 16 2.5C17.3778 2.5 18.5 3.62222 18.5 5V11.5H20.5V5C20.5 2.51111 18.4889 0.5 16 0.5C13.5111 0.5 11.5 2.51111 11.5 5V6.22222C10.5889 6.58889 10 7.46667 10 8.5V11.5H2V21.5H12V17.5H14V14.5H16V11.5H13.5V8.5C13.5 7.46667 12.5889 6.58889 11.5 6.22222H13.5Z"/></svg>
+                        </button>
+                        <input type="text" id="answer-input" placeholder="ENTER YOUR ANSWER..." class="custom-input font-tech w-full flex-grow bg-gray-700 text-white placeholder-gray-500 border-2 border-gray-600 focus:border-emerald-500 focus:ring-0 rounded-lg p-4 text-lg uppercase">
+                        <button id="hint-btn" class="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 glowing-button">GET HINT</button>
+                        <button id="submit-btn" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-4 px-8 rounded-lg transition-transform transform hover:scale-105 glowing-button">SUBMIT</button>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="new-practice-puzzle-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 rounded-lg transition">New Practice Puzzle</button>
+                    </div>
+                    <div id="message-box" class="mt-6 p-4 rounded-lg text-center opacity-0 transform -translate-y-4 transition-all">
+                        <p id="message-text" class="font-semibold"></p>
+                    </div>
+                </main>
+            </div>
+        </div>
+        
+        <!-- Store Page -->
+        <div id="store-page" class="page hidden-page hide-default">
+            <div class="animated-glowing-border">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech mb-4 text-center">THE BLACK MARKET</h1>
+                    <div id="store-items" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div class="text-center mt-8">
+                        <button class="back-to-hub-btn hub-button inline-block">Return to Mission Control</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Code Forge Page -->
+        <div id="create-page" class="page hidden-page hide-default">
+            <div class="animated-glowing-border">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech mb-4 text-center">CODE FORGE</h1>
+                    <div class="space-y-4">
+                        <textarea id="forge-input" rows="3" placeholder="Enter text to encrypt..." class="custom-input font-tech w-full bg-gray-900 border-2 border-gray-700 rounded-lg p-3"></textarea>
+                        <select id="forge-cipher" class="custom-input font-tech w-full bg-gray-900 border-2 border-gray-700 rounded-lg p-3"></select>
+                        <button id="forge-generate-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 rounded-lg">Generate Code</button>
+                        <div id="forge-output-container" class="bg-gray-900 p-4 rounded-lg min-h-[50px] break-words">
+                            <p id="forge-output" class="text-emerald-300 font-tech"></p>
+                        </div>
+                    </div>
+                    <div class="text-center mt-8">
+                        <button class="back-to-hub-btn hub-button inline-block">Return to Mission Control</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Profile Page -->
+        <div id="profile-page" class="page hidden-page hide-default">
+             <div class="animated-glowing-border">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 id="profile-name" class="text-2xl sm:text-3xl md:text-4xl font-bold text-emerald-400 text-glow font-tech">AGENT PROFILE</h1>
+                        <button id="settings-btn" class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold p-3 rounded-full transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </button>
+                    </div>
+                    <!-- Profile Tabs -->
+                    <div class="mb-4 border-b border-gray-700">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button id="tab-inventory" class="profile-tab text-yellow-400 border-yellow-400 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Inventory</button>
+                            <button id="tab-achievements" class="profile-tab text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Achievements</button>
+                        </nav>
+                    </div>
+                    <!-- Tab Content -->
+                    <div id="tab-content-inventory">
+                        <h2 class="text-xl font-bold text-yellow-400 font-tech mb-4">INVENTORY</h2>
+                        <div id="inventory-display" class="space-y-2"></div>
+                    </div>
+                    <div id="tab-content-achievements" class="hidden">
+                         <h2 class="text-xl font-bold text-yellow-400 font-tech mb-4">ACHIEVEMENTS</h2>
+                        <div id="achievement-display" class="grid grid-cols-4 sm:grid-cols-6 gap-4">
+                            <!-- Achievements will be dynamically inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-8">
+                        <button class="back-to-hub-btn hub-button inline-block">Return to Mission Control</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div id="settings-page" class="page hidden-page hide-default">
+            <div class="animated-glowing-border">
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech mb-8 text-center">SETTINGS</h1>
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <button id="change-name-btn" class="w-full hub-button text-left"><h2 class="text-xl font-bold text-emerald-400 font-tech">Change Callsign</h2></button>
+                        <button id="save-progress-btn" class="w-full hub-button text-left"><h2 class="text-xl font-bold text-emerald-400 font-tech">Save Progress</h2></button>
+                        <div id="delete-account-section">
+                            <button id="delete-account-btn" class="w-full hub-button text-left !border-red-500/50"><h2 class="text-xl font-bold text-red-500 font-tech">Delete Account</h2></button>
+                            <button id="delete-confirm-btn" class="hidden w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg text-lg font-tech">ARE YOU SURE? THIS CANNOT BE UNDONE.</button>
+                        </div>
+                        <button id="exit-settings-btn" class="w-full hub-button text-left"><h2 class="text-xl font-bold text-emerald-400 font-tech">Exit to Profile</h2></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // --- DOM Elements ---
+    const pages = { splash: document.getElementById('splash-screen'), title: document.getElementById('title-page'), login: document.getElementById('login-page'), hub: document.getElementById('mission-hub'), game: document.getElementById('game-wrapper'), store: document.getElementById('store-page'), create: document.getElementById('create-page'), profile: document.getElementById('profile-page'), settings: document.getElementById('settings-page') };
+    const spotlight = document.getElementById('spotlight');
+    const gameWrapper = document.getElementById('game-wrapper');
+    const playerNameInput = document.getElementById('player-name-input');
+    const startAgentBtn = document.getElementById('start-agent-btn');
+    const startGuestBtn = document.getElementById('start-guest-btn');
+    const continueBtn = document.getElementById('continue-btn');
+    const campaignBtn = document.getElementById('campaign-btn');
+    const storeBtn = document.getElementById('store-btn');
+    const practiceBtn = document.getElementById('practice-btn');
+    const createBtn = document.getElementById('create-btn');
+    const profileBtn = document.getElementById('profile-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const menuBtn = document.getElementById('menu-btn');
+    const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const hintBtn = document.getElementById('hint-btn');
+    const skeletonKeyBtn = document.getElementById('skeleton-key-btn');
+    const newPracticePuzzleBtn = document.getElementById('new-practice-puzzle-btn');
+    const answerInput = document.getElementById('answer-input');
+    const messageText = document.getElementById('message-text');
+    const levelDisplay = document.getElementById('level-display').querySelector('span');
+    const scoreDisplay = document.getElementById('score-display').querySelector('span');
+    const hubLevel = document.getElementById('hub-level');
+    const hubScore = document.getElementById('hub-score');
+    const hubWelcomeMessage = document.getElementById('hub-welcome-message');
+    const puzzleTitle = document.getElementById('puzzle-title');
+    const puzzleContent = document.getElementById('puzzle-content');
+    const puzzleHint = document.getElementById('puzzle-hint');
+    const gameModeSubtitle = document.getElementById('game-mode-subtitle');
+    const storeItemsContainer = document.getElementById('store-items');
+    const forgeStatus = document.getElementById('forge-status');
+    const forgeInput = document.getElementById('forge-input');
+    const forgeCipher = document.getElementById('forge-cipher');
+    const forgeGenerateBtn = document.getElementById('forge-generate-btn');
+    const forgeOutput = document.getElementById('forge-output');
+    const profileName = document.getElementById('profile-name');
+    const inventoryDisplay = document.getElementById('inventory-display');
+    const achievementDisplay = document.getElementById('achievement-display');
+    const badgeShowcase = document.getElementById('badge-showcase');
+    const tabInventory = document.getElementById('tab-inventory');
+    const tabAchievements = document.getElementById('tab-achievements');
+    const tabContentInventory = document.getElementById('tab-content-inventory');
+    const tabContentAchievements = document.getElementById('tab-content-achievements');
+    const changeNameBtn = document.getElementById('change-name-btn');
+    const saveProgressBtn = document.getElementById('save-progress-btn');
+    const deleteAccountBtn = document.getElementById('delete-account-btn');
+    const deleteConfirmBtn = document.getElementById('delete-confirm-btn');
+    const exitSettingsBtn = document.getElementById('exit-settings-btn');
+
+
+    // --- Game State & Data ---
+    let state = {};
+    const HINT_COST = 50;
+    const FORGE_UNLOCK_LEVEL = 5;
+    const initialState = {
+        currentPage: 'splash',
+        gameMode: null,
+        player: {
+            name: 'Guest',
+            level: 1, score: 0, streak: 0, strikes: 0, hintsUsedThisLevel: 0,
+            inventory: { streak_shield: 0, skeleton_key: 0, hint_pack: 0 },
+            unlockedCiphers: [],
+            unlockedAchievements: [],
+            showcasedBadges: [null, null, null],
+            stats: { puzzlesAttempted: 0, hintsUsed: 0, practiceSolved: 0 }
+        },
+        currentPuzzle: null
+    };
+
+    const campaignPuzzles = [
+        { level: 1, type: 'caesar', question: 'AGENT', answer: 'DJHQW', hint: 'Shift by 3', points: 100 },
+        { level: 2, type: 'scramble', question: 'CIPHER', answer: 'CIPHER', hint: 'Unscramble the letters', points: 150 },
+        { level: 3, type: 'binary', question: 'CODE', answer: 'CODE', hint: '01000011 01001111 01000100 01000101', points: 200 },
+        { level: 4, type: 'math', question: '5 * 8 + 2', answer: '42', hint: 'Follow the order of operations.', points: 120 },
+        { level: 5, type: 'caesar', question: 'SECRET', answer: 'VHFUHW', hint: 'Shift by 3', points: 180 },
+    ];
+
+    const storeItems = [
+        { id: 'streak_shield', name: 'Streak Shield', cost: 1000, description: 'Protects your point streak from one wrong answer.', type: 'item' },
+        { id: 'skeleton_key', name: 'Skeleton Key', cost: 2500, description: 'Instantly solves one level. A true master key.', type: 'item' },
+        { id: 'hint_pack', name: 'Hint Pack (3x)', cost: 120, description: 'A pack of 3 hints to use when you are stuck.', type: 'item' },
+        { id: 'caesar_module', name: 'Caesar Cipher Module', cost: 500, description: 'Unlocks the Caesar cipher in the Code Forge.', type: 'cipher', cipher: 'caesar' }
+    ];
+    
+    const practicePuzzles = [
+        { type: 'scramble', word: 'ENIGMA' }, { type: 'scramble', word: 'SIGNAL' },
+        { type: 'caesar', word: 'ATTACK' }, { type: 'caesar', word: 'STEALTH' },
+        { type: 'binary', word: 'SPY' }, { type: 'math' }
+    ];
+
+    const achievements = [
+        { id: 1, name: 'First Steps', description: 'Complete level 1.', criteria: (s) => s.player.level > 1 },
+        { id: 2, name: 'Rookie Agent', description: 'Reach level 5.', criteria: (s) => s.player.level >= 5 },
+        { id: 3, name: 'Novice Coder', description: 'Solve a binary puzzle.', criteria: (s, p) => p && p.type === 'binary' },
+        { id: 4, name: 'Number Cruncher', description: 'Solve a math puzzle.', criteria: (s, p) => p && p.type === 'math' },
+        { id: 5, name: 'Unscrambler', description: 'Solve a scramble puzzle.', criteria: (s, p) => p && p.type === 'scramble' },
+        { id: 6, name: 'High Roller', description: 'Accumulate 1000 points.', criteria: (s) => s.player.score >= 1000 },
+        { id: 7, name: 'Hot Streak', description: 'Achieve a 5-puzzle streak.', criteria: (s) => s.player.streak >= 5 },
+        { id: 8, name: 'Big Spender', description: 'Buy an item from the Black Market.', criteria: (s, p, a) => a && a.action === 'buy' },
+        { id: 9, name: 'Master Key', description: 'Use a Skeleton Key.', criteria: (s, p, a) => a && a.action === 'use_key' },
+        { id: 10, name: 'Well-Prepared', description: 'Buy a Streak Shield.', criteria: (s, p, a) => a && a.action === 'buy' && a.item.id === 'streak_shield' },
+        { id: 11, name: 'The Creator', description: 'Use the Code Forge.', criteria: (s, p, a) => a && a.action === 'forge' },
+        { id: 12, name: 'Getting the Hang of It', description: 'Complete 10 practice puzzles.', criteria: (s) => (s.player.stats?.practiceSolved || 0) >= 10 },
+        { id: 13, name: 'Dedicated Agent', description: 'Reach level 10.', criteria: (s) => s.player.level >= 10 },
+        { id: 14, name: 'Perfect Round', description: 'Solve a puzzle with no strikes.', criteria: (s, p, a) => a && a.action === 'solve' && s.player.strikes === 0 },
+        { id: 15, name: 'Close Call', description: 'Solve a puzzle with 3 strikes.', criteria: (s, p, a) => a && a.action === 'solve' && s.player.strikes === 3 },
+        { id: 16, name: 'Hint Enthusiast', description: 'Use 5 hints.', criteria: (s) => (s.player.stats?.hintsUsed || 0) >= 5 },
+        { id: 17, name: 'Millionaire Mindset', description: 'Accumulate 5000 points.', criteria: (s) => s.player.score >= 5000 },
+        { id: 18, name: 'Unstoppable', description: 'Achieve a 10-puzzle streak.', criteria: (s) => s.player.streak >= 10 },
+        { id: 19, name: 'Armory', description: 'Own all items from the Black Market.', criteria: (s) => storeItems.filter(i=>i.type === 'item').every(i => s.player.inventory[i.id] > 0) },
+        { id: 20, name: 'Cipher Master', description: 'Unlock all ciphers in the Code Forge.', criteria: (s) => storeItems.filter(i=>i.type === 'cipher').every(i => s.player.unlockedCiphers.includes(i.cipher)) },
+        { id: 21, name: 'Veteran Agent', description: 'Reach level 25.', criteria: (s) => s.player.level >= 25 },
+        { id: 22, name: 'No Help Needed', description: 'Solve a puzzle without using the free hint.', criteria: (s,p,a) => a && a.action === 'solve' && s.player.hintsUsedThisLevel === 0},
+        { id: 23, name: 'Persistent', description: 'Attempt 50 puzzles.', criteria: (s) => (s.player.stats?.puzzlesAttempted || 0) >= 50},
+        { id: 24, name: 'Guest Pass', description: 'Play as a guest.', criteria: (s,p,a) => a && a.action === 'login' && s.player.name === 'Guest'},
+        { id: 25, name: 'Registered Agent', description: 'Log in with a callsign.', criteria: (s,p,a) => a && a.action === 'login' && s.player.name !== 'Guest'},
+    ];
+
+
+    // --- Puzzle Logic & Generation ---
+    const puzzleMaster = {
+        caesar: (word) => {
+            const shift = 3;
+            const encrypted = word.toUpperCase().split('').map(char => {
+                if (char < 'A' || char > 'Z') return char;
+                return String.fromCharCode(((char.charCodeAt(0) - 65 + shift) % 26) + 65);
+            }).join('');
+            return { question: encrypted, answer: word.toUpperCase() };
+        },
+        scramble: (word) => {
+            let scrambled = word.toUpperCase().split('');
+            for (let i = scrambled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
+            }
+            if (scrambled.join('') === word.toUpperCase()) return puzzleMaster.scramble(word);
+            return { question: scrambled.join(''), answer: word.toUpperCase() };
+        },
+        binary: (word) => {
+            const binaryString = word.toUpperCase().split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+            return { question: binaryString, answer: word.toUpperCase() };
+        },
+        math: () => {
+            const num1 = Math.floor(Math.random() * 10) + 1;
+            const num2 = Math.floor(Math.random() * 10) + 1;
+            const num3 = Math.floor(Math.random() * 20) + 1;
+            return { question: `${num1} * ${num2} + ${num3}`, answer: (num1 * num2 + num3).toString() };
+        }
+    };
+
+    // --- Core Navigation & State Management ---
+    function saveState() {
+        localStorage.setItem('codebreaker_save', JSON.stringify(state));
+    }
+
+    function loadState() {
+        const savedState = localStorage.getItem('codebreaker_save');
+        if (savedState) {
+            state = Object.assign({}, JSON.parse(JSON.stringify(initialState)), JSON.parse(savedState));
+             // Ensure nested objects are present
+            state.player.inventory = state.player.inventory || initialState.player.inventory;
+            state.player.stats = state.player.stats || initialState.player.stats;
+        } else {
+            state = JSON.parse(JSON.stringify(initialState));
+        }
+        state.currentPage = 'splash';
+    }
+
+    function navigateTo(pageName, isRandomTransition = false) {
+        if (!pages[pageName] || state.currentPage === pageName) return;
+        
+        const outgoingPage = pages[state.currentPage];
+        const incomingPage = pages[pageName];
+        
+        // Handle spotlight effect
+        if (pageName === 'title') {
+            spotlight.style.opacity = '1';
+            document.body.style.cursor = 'none';
+        } else {
+            spotlight.style.opacity = '0';
+            document.body.style.cursor = 'default';
+        }
+
+        // Prepare for transition
+        outgoingPage.classList.add('hidden-page');
+        outgoingPage.classList.remove('visible-page');
+
+        const transitions = ['hide-default', 'hide-slide-left', 'hide-slide-up'];
+        const transitionClass = isRandomTransition ? transitions[Math.floor(Math.random() * transitions.length)] : 'hide-default';
+        
+        incomingPage.classList.add('hidden-page', transitionClass);
+        
+        // Force a reflow before applying the visible class to ensure transition runs
+        void incomingPage.offsetWidth;
+
+        incomingPage.classList.remove('hidden-page', 'hide-default', 'hide-slide-left', 'hide-slide-up');
+        incomingPage.classList.add('visible-page');
+        
+        state.currentPage = pageName;
+        if (pageName === 'hub') updateHubUI();
+        saveState();
+    }
+
+    // --- Main Game Flow ---
+    function startGame(mode) {
+        state.gameMode = mode;
+        if (mode === 'campaign') {
+            gameModeSubtitle.textContent = "Main Campaign";
+            newPracticePuzzleBtn.classList.add('hidden');
+            loadLevel(state.player.level);
+        } else {
+            gameModeSubtitle.textContent = "Practice Range";
+            newPracticePuzzleBtn.classList.remove('hidden');
+            generatePracticePuzzle();
+        }
+    }
+
+    function loadLevel(level) {
+        state.player.hintsUsedThisLevel = 0;
+        const puzzleData = campaignPuzzles.find(p => p.level === level);
+        if (!puzzleData) {
+            displayPuzzle({ title: 'CAMPAIGN COMPLETE!', content: 'You are a master agent!', hint: '' });
+            return;
+        }
+        let puzzle = { ...puzzleData };
+        if (puzzle.type === 'scramble') puzzle.question = puzzleMaster.scramble(puzzle.question).question;
+        else if(puzzle.type === 'binary') puzzle.question = puzzleMaster.binary(puzzle.question).question;
+        state.currentPuzzle = puzzle;
+        displayPuzzle(puzzle);
+        navigateTo('game');
+    }
+    
+    function generatePracticePuzzle() {
+        state.player.hintsUsedThisLevel = 0;
+        const randomType = practicePuzzles[Math.floor(Math.random() * practicePuzzles.length)];
+        let puzzle = { level: 'Practice', type: randomType.type, points: 50 };
+        const generated = puzzleMaster[randomType.type](randomType.word || '');
+        puzzle.question = generated.question;
+        puzzle.answer = generated.answer;
+        puzzle.hint = `A random ${randomType.type} puzzle.`;
+        state.currentPuzzle = puzzle;
+        displayPuzzle(puzzle);
+        navigateTo('game');
+    }
+
+    function displayPuzzle(puzzle) {
+        puzzleTitle.textContent = puzzle.level ? `LEVEL ${puzzle.level} - ${puzzle.type.toUpperCase()}` : puzzle.title;
+        puzzleContent.textContent = puzzle.question || puzzle.content;
+        puzzleHint.textContent = puzzle.hint;
+        puzzleHint.classList.add('invisible');
+        answerInput.value = '';
+        state.player.stats.puzzlesAttempted = (state.player.stats.puzzlesAttempted || 0) + 1;
+        updateGameUI();
+    }
+    
+    function checkAchievements(puzzle, action) {
+        achievements.forEach(ach => {
+            if (!state.player.unlockedAchievements.includes(ach.id) && ach.criteria(state, puzzle, action)) {
+                state.player.unlockedAchievements.push(ach.id);
+                showMessage(`Achievement Unlocked: ${ach.name}!`, true);
+                // Add to showcase if there's space
+                const emptySlot = state.player.showcasedBadges.indexOf(null);
+                if(emptySlot !== -1) {
+                    state.player.showcasedBadges[emptySlot] = ach.id;
+                }
+            }
+        });
+    }
+
+    function handleCorrectAnswer() {
+        let pointsEarned = state.currentPuzzle.points;
+        if (state.player.strikes < 4) {
+            state.player.streak++;
+            pointsEarned *= (1 + state.player.streak * 0.1);
+        }
+        state.player.score += Math.round(pointsEarned);
+        showMessage(`CORRECT! +${Math.round(pointsEarned)} POINTS`, true);
+        
+        gameWrapper.classList.add('flash-success');
+        setTimeout(() => gameWrapper.classList.remove('flash-success'), 800);
+
+        if (state.gameMode === 'practice') {
+            state.player.stats.practiceSolved = (state.player.stats.practiceSolved || 0) + 1;
+        }
+
+        checkAchievements(state.currentPuzzle, { action: 'solve' });
+
+        if (state.gameMode === 'campaign') {
+            state.player.level++;
+            state.player.strikes = 0;
+            setTimeout(() => loadLevel(state.player.level), 2000);
+        } else {
+            setTimeout(generatePracticePuzzle, 2000);
+        }
+        updateGameUI();
+        saveState();
+    }
+
+    function checkAnswer() {
+        const userAnswer = answerInput.value.trim().toUpperCase();
+        if (!userAnswer) {
+            showMessage("Please enter an answer.", false);
+            return;
+        }
+
+        if (userAnswer === state.currentPuzzle.answer) {
+            handleCorrectAnswer();
+        } else {
+            if (state.player.inventory.streak_shield > 0 && state.player.strikes === 0) {
+                showMessage('STREAK SHIELD ACTIVATED! Your streak is safe.', false);
+                state.player.inventory.streak_shield--;
+            } else {
+                state.player.streak = 0;
+            }
+            state.player.strikes++;
+            showMessage(`INCORRECT. STRIKES: ${state.player.strikes}/4`, false);
+            if (state.player.strikes >= 4) showMessage('STREAK LOST. Too many strikes.', false);
+            updateGameUI();
+            saveState();
+        }
+    }
+
+    function useSkeletonKey() {
+        if (state.player.inventory.skeleton_key > 0) {
+            state.player.inventory.skeleton_key--;
+            showMessage('Skeleton Key Used. Level Bypassed.', true);
+            checkAchievements(null, {action: 'use_key'});
+            handleCorrectAnswer();
+        }
+    }
+
+    // --- Hint Logic ---
+    function getHint() {
+        state.player.stats.hintsUsed = (state.player.stats.hintsUsed || 0) + 1;
+        if (state.player.hintsUsedThisLevel === 0) {
+            state.player.hintsUsedThisLevel++;
+            puzzleHint.classList.remove('invisible');
+            showMessage('First hint is free!', true);
+        } else if (state.player.inventory.hint_pack > 0) {
+            state.player.inventory.hint_pack--;
+            puzzleHint.classList.remove('invisible');
+            showMessage(`Hint from pack used! You have ${state.player.inventory.hint_pack} left.`, true);
+        } else if (state.player.score >= HINT_COST) {
+            state.player.score -= HINT_COST;
+            puzzleHint.classList.remove('invisible');
+            showMessage(`Hint purchased for ${HINT_COST} points.`, true);
+        } else {
+            showMessage(`Not enough points or hints! (Cost: ${HINT_COST})`, false);
+        }
+        checkAchievements(null, {action: 'hint'});
+        updateGameUI();
+        saveState();
+    }
+
+    // --- UI Updates & Messaging ---
+    function updateGameUI() {
+        levelDisplay.textContent = state.gameMode === 'campaign' ? state.player.level : 'PRACTICE';
+        scoreDisplay.textContent = state.player.score;
+        if (state.player.hintsUsedThisLevel === 0) {
+            hintBtn.textContent = 'GET HINT (FREE)';
+        } else if (state.player.inventory.hint_pack > 0) {
+            hintBtn.textContent = `GET HINT (${state.player.inventory.hint_pack} LEFT)`;
+        } else {
+            hintBtn.textContent = `GET HINT (${HINT_COST} PTS)`;
+        }
+        skeletonKeyBtn.classList.toggle('hidden', state.player.inventory.skeleton_key <= 0);
+    }
+    
+    function updateHubUI() {
+        hubLevel.textContent = state.player.level;
+        hubScore.textContent = state.player.score;
+        hubWelcomeMessage.innerHTML = `Select your operation, Agent <span class="text-yellow-400">${state.player.name}</span>. Your score: <span id="hub-score">${state.player.score}</span>`;
+        const forgeButton = document.getElementById('create-btn');
+        if (state.player.level >= FORGE_UNLOCK_LEVEL) {
+            forgeStatus.textContent = 'Create your own encrypted messages.';
+            forgeButton.classList.remove('disabled-button');
+        } else {
+            forgeStatus.textContent = `Unlocks at Level ${FORGE_UNLOCK_LEVEL}`;
+            forgeButton.classList.add('disabled-button');
+        }
+        renderBadgeShowcase();
+    }
+
+    function showMessage(text, isSuccess) {
+        const el = document.getElementById('message-box');
+        if (!el) return;
+        el.querySelector('p').textContent = text;
+        
+        el.classList.remove('bg-emerald-500/20', 'text-emerald-300', 'bg-red-500/20', 'text-red-300');
+        if (isSuccess) {
+            el.classList.add('bg-emerald-500/20', 'text-emerald-300');
+        } else {
+            el.classList.add('bg-red-500/20', 'text-red-300');
+        }
+
+        el.classList.remove('opacity-0', '-translate-y-4');
+        el.classList.add('opacity-100', 'translate-y-0');
+
+        setTimeout(() => {
+            el.classList.remove('opacity-100', 'translate-y-0');
+            el.classList.add('opacity-0', '-translate-y-4');
+        }, 3000);
+    }
+
+    // --- Store Logic ---
+    function renderStore() {
+        storeItemsContainer.innerHTML = '';
+        storeItems.forEach(item => {
+            if (item.type === 'cipher' && state.player.unlockedCiphers.includes(item.cipher)) return;
+            const itemEl = document.createElement('div');
+            itemEl.className = 'hub-button';
+            itemEl.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg font-bold text-emerald-400">${item.name}</h3>
+                        <p class="text-gray-400">${item.description}</p>
+                    </div>
+                    <button class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded mt-2 whitespace-nowrap" onclick="buyItem('${item.id}')">COST: ${item.cost}</button>
+                </div>
+            `;
+            storeItemsContainer.appendChild(itemEl);
+        });
+    }
+
+    function buyItem(itemId) {
+        const item = storeItems.find(i => i.id === itemId);
+        if (state.player.score >= item.cost) {
+            state.player.score -= item.cost;
+            if (item.type === 'item') {
+                state.player.inventory[item.id]++;
+            } else if (item.type === 'cipher') {
+                state.player.unlockedCiphers.push(item.cipher);
+            }
+            showMessage(`Purchased ${item.name}!`, true);
+            checkAchievements(null, {action: 'buy', item: item});
+            updateHubUI();
+            saveState();
+            renderStore();
+        } else {
+            showMessage("Not enough points!", false);
+        }
+    }
+    
+    // --- Code Forge Logic ---
+    function openCodeForge() {
+        if (state.player.level < FORGE_UNLOCK_LEVEL) {
+            return;
+        }
+        forgeCipher.innerHTML = '';
+        state.player.unlockedCiphers.forEach(cipher => {
+            const option = document.createElement('option');
+            option.value = cipher;
+            option.textContent = cipher.charAt(0).toUpperCase() + cipher.slice(1) + ' Cipher';
+            forgeCipher.appendChild(option);
+        });
+        navigateTo('create');
+    }
+
+    function generateForgedCode() {
+        const text = forgeInput.value;
+        const cipherType = forgeCipher.value;
+        if (!text || !cipherType) {
+            forgeOutput.textContent = 'Please enter text and select a cipher.';
+            return;
+        }
+        const result = puzzleMaster[cipherType](text);
+        forgeOutput.textContent = result.question;
+        checkAchievements(null, {action: 'forge'});
+    }
+
+    // --- Profile & Achievement Logic ---
+    function openProfile() {
+        profileName.textContent = `AGENT: ${state.player.name.toUpperCase()}`;
+        renderInventory();
+        renderAchievements();
+        navigateTo('profile');
+    }
+
+    function renderInventory() {
+        inventoryDisplay.innerHTML = '';
+        for (const [key, value] of Object.entries(state.player.inventory)) {
+            if (value > 0) {
+                const itemName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const itemEl = document.createElement('p');
+                itemEl.className = 'text-gray-300';
+                itemEl.innerHTML = `<span class="font-bold text-emerald-400">${itemName}:</span> ${value}`;
+                inventoryDisplay.appendChild(itemEl);
+            }
+        }
+        if (inventoryDisplay.innerHTML === '') {
+            inventoryDisplay.innerHTML = '<p class="text-gray-500 italic">No items in inventory.</p>';
+        }
+    }
+
+    function renderAchievements() {
+        achievementDisplay.innerHTML = '';
+        achievements.forEach(ach => {
+            const isUnlocked = state.player.unlockedAchievements.includes(ach.id);
+            const badgeEl = document.createElement('button');
+            badgeEl.className = 'aspect-square flex items-center justify-center rounded-lg relative group';
+            badgeEl.title = `${ach.name}\n${ach.description}`;
+            if (isUnlocked) {
+                badgeEl.innerHTML = `<img src="ab${ach.id}.png" alt="${ach.name}" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://placehold.co/128x128/374151/9ca3af?text=AB%0A${ach.id}'">`;
+                badgeEl.onclick = () => selectShowcaseBadge(ach.id);
+            } else {
+                badgeEl.innerHTML = `<img src="https://placehold.co/128x128/1f2937/4b5563?text=?" alt="Locked Achievement" class="w-full h-full object-cover rounded-lg opacity-50">`;
+                badgeEl.disabled = true;
+            }
+            achievementDisplay.appendChild(badgeEl);
+        });
+    }
+    
+    function renderBadgeShowcase() {
+        badgeShowcase.innerHTML = '';
+        for(let i = 0; i < 3; i++) {
+            const badgeId = state.player.showcasedBadges[i];
+            const showcaseEl = document.createElement('button');
+            showcaseEl.className = 'w-12 h-12 bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-600 hover:border-yellow-400 transition';
+            showcaseEl.onclick = () => openProfileAndGoToAchievements();
+            if(badgeId) {
+                showcaseEl.innerHTML = `<img src="ab${badgeId}.png" alt="Showcased Badge" class="w-full h-full object-cover rounded-md" onerror="this.src='https://placehold.co/128x128/374151/9ca3af?text=AB%0A${badgeId}'">`;
+            }
+            badgeShowcase.appendChild(showcaseEl);
+        }
+    }
+
+    function selectShowcaseBadge(badgeId) {
+        const emptySlot = state.player.showcasedBadges.indexOf(null);
+        if(emptySlot !== -1) {
+            state.player.showcasedBadges[emptySlot] = badgeId;
+        } else {
+             // Replace the first one if all are full
+            state.player.showcasedBadges[0] = badgeId;
+        }
+        showMessage('Badge added to showcase!', true);
+        saveState();
+        navigateTo('hub');
+    }
+
+    function openProfileAndGoToAchievements() {
+        openProfile();
+        switchProfileTab('achievements');
+    }
+
+    function switchProfileTab(tabName) {
+        if (tabName === 'inventory') {
+            tabContentInventory.classList.remove('hidden');
+            tabContentAchievements.classList.add('hidden');
+            tabInventory.classList.add('text-yellow-400', 'border-yellow-400');
+            tabAchievements.classList.remove('text-yellow-400', 'border-yellow-400');
+        } else {
+            tabContentInventory.classList.add('hidden');
+            tabContentAchievements.classList.remove('hidden');
+            tabInventory.classList.remove('text-yellow-400', 'border-yellow-400');
+            tabAchievements.classList.add('text-yellow-400', 'border-yellow-400');
+        }
+    }
+
+
+    // --- Settings Logic ---
+    function handleChangeName() {
+        const newName = prompt("Enter your new callsign:", state.player.name);
+        if (newName && newName.trim() !== '') {
+            state.player.name = newName.trim();
+            saveState();
+            openProfile(); // Refresh profile view
+            showMessage("Callsign updated!", true);
+        }
+    }
+
+    function handleDeleteAccount() {
+        localStorage.removeItem('codebreaker_save');
+        window.location.reload();
+    }
+
+
+    // --- Initialization & Event Listeners ---
+    function initialize() {
+        loadState();
+        setTimeout(() => navigateTo('title'), 3000);
+    }
+    
+    function login(isGuest) {
+        if(isGuest) {
+            state.player.name = 'Guest';
+        } else {
+            const name = playerNameInput.value.trim();
+            state.player.name = name === '' ? 'Agent' : name;
+        }
+        checkAchievements(null, {action: 'login'});
+        navigateTo('hub');
+    }
+
+    window.addEventListener('load', initialize);
+    
+    window.addEventListener('mousemove', (e) => {
+        if (state.currentPage === 'title') {
+            spotlight.style.background = `radial-gradient(circle at ${e.clientX}px ${e.clientY}px, transparent 120px, rgba(0, 0, 0, 0.98) 320px)`;
+        }
+    });
+
+    continueBtn.addEventListener('click', () => navigateTo('login', true));
+    startGuestBtn.addEventListener('click', () => login(true));
+    startAgentBtn.addEventListener('click', () => login(false));
+    playerNameInput.addEventListener('keyup', (e) => e.key === 'Enter' && login(false));
+
+    campaignBtn.addEventListener('click', () => startGame('campaign'));
+    practiceBtn.addEventListener('click', () => startGame('practice'));
+    storeBtn.addEventListener('click', () => { renderStore(); navigateTo('store'); });
+    createBtn.addEventListener('click', openCodeForge);
+    profileBtn.addEventListener('click', openProfile);
+    settingsBtn.addEventListener('click', () => navigateTo('settings'));
+    
+    menuBtn.addEventListener('click', () => navigateTo('hub'));
+    backToHubBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('hub')));
+    
+    submitBtn.addEventListener('click', checkAnswer);
+    answerInput.addEventListener('keyup', (e) => e.key === 'Enter' && checkAnswer());
+    
+    hintBtn.addEventListener('click', getHint);
+    skeletonKeyBtn.addEventListener('click', useSkeletonKey);
+
+    newPracticePuzzleBtn.addEventListener('click', generatePracticePuzzle);
+    
+    forgeGenerateBtn.addEventListener('click', generateForgedCode);
+    
+    // Settings buttons
+    changeNameBtn.addEventListener('click', handleChangeName);
+    saveProgressBtn.addEventListener('click', () => {
+        saveState();
+        showMessage("Progress Saved Manually!", true);
+    });
+    deleteAccountBtn.addEventListener('click', () => {
+        deleteAccountBtn.classList.add('hidden');
+        deleteConfirmBtn.classList.remove('hidden');
+    });
+    deleteConfirmBtn.addEventListener('click', handleDeleteAccount);
+    exitSettingsBtn.addEventListener('click', () => navigateTo('profile'));
+
+    // Profile Tabs
+    tabInventory.addEventListener('click', () => switchProfileTab('inventory'));
+    tabAchievements.addEventListener('click', () => switchProfileTab('achievements'));
+
+
+    </script>
+</body>
+</html>
