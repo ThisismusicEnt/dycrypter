@@ -154,13 +154,11 @@
         <!-- Mission Control Hub -->
         <div id="mission-hub" class="page hidden-page hide-default">
             <div class="animated-glowing-border">
-                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
-                    <div class="flex justify-between items-start mb-4">
-                        <div id="badge-showcase" class="flex gap-2">
-                            <!-- Showcase badges appear here -->
-                        </div>
-                        <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech text-center flex-grow">MISSION CONTROL</h1>
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8 relative">
+                    <div id="badge-showcase" class="absolute top-6 left-6 flex gap-2">
+                        <!-- Showcase badges appear here -->
                     </div>
+                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech text-center mb-4">MISSION CONTROL</h1>
                     <p id="hub-welcome-message" class="text-center text-gray-400 mb-8">Select your operation, Agent. Your score: <span id="hub-score">0</span></p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <button id="campaign-btn" class="hub-button">
@@ -190,41 +188,43 @@
 
         <!-- Main Game Container -->
         <div id="game-wrapper" class="page hidden-page hide-default">
-            <div id="game-container" class="w-full mx-auto bg-gray-900 rounded-2xl">
-                <header class="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-bold text-emerald-400 text-glow font-tech">DECRYPT</h1>
-                        <p id="game-mode-subtitle" class="text-xs sm:text-sm text-gray-400">Mission in Progress...</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right text-sm sm:text-lg">
-                            <div id="level-display" class="font-bold font-tech">LEVEL: <span>1</span></div>
-                            <div id="score-display" class="font-bold font-tech">SCORE: <span>0</span></div>
+            <div class="animated-glowing-border">
+                <div id="game-container" class="w-full mx-auto bg-gray-900 rounded-2xl">
+                    <header class="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-xl sm:text-2xl font-bold text-emerald-400 text-glow font-tech">DECRYPT</h1>
+                            <p id="game-mode-subtitle" class="text-xs sm:text-sm text-gray-400">Mission in Progress...</p>
                         </div>
-                        <button id="menu-btn" class="bg-gray-700 hover:bg-red-800/50 text-red-400 font-bold py-2 px-4 rounded-lg transition font-tech">MENU</button>
-                    </div>
-                </header>
-                <main class="p-4 sm:p-6">
-                    <div id="puzzle-container" class="bg-gray-800/50 p-6 rounded-lg border border-gray-700 mb-6 text-center min-h-[150px]">
-                        <h2 id="puzzle-title" class="text-lg font-semibold text-gray-400 mb-4"></h2>
-                        <p id="puzzle-content" class="text-xl sm:text-3xl text-emerald-300 font-tech tracking-widest break-words"></p>
-                        <p id="puzzle-hint" class="text-sm text-gray-500 mt-4 italic invisible"></p>
-                    </div>
-                    <div id="input-section" class="flex flex-col sm:flex-row items-center gap-4">
-                        <button id="skeleton-key-btn" title="Use Skeleton Key" class="hidden w-16 h-16 bg-gray-700 hover:bg-purple-700 text-purple-400 font-bold p-3 rounded-lg transition-transform transform hover:scale-105">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full"><path d="M13.5 6.22222V5C13.5 3.62222 14.6222 2.5 16 2.5C17.3778 2.5 18.5 3.62222 18.5 5V11.5H20.5V5C20.5 2.51111 18.4889 0.5 16 0.5C13.5111 0.5 11.5 2.51111 11.5 5V6.22222C10.5889 6.58889 10 7.46667 10 8.5V11.5H2V21.5H12V17.5H14V14.5H16V11.5H13.5V8.5C13.5 7.46667 12.5889 6.58889 11.5 6.22222H13.5Z"/></svg>
-                        </button>
-                        <input type="text" id="answer-input" placeholder="ENTER YOUR ANSWER..." class="custom-input font-tech w-full flex-grow bg-gray-700 text-white placeholder-gray-500 border-2 border-gray-600 focus:border-emerald-500 focus:ring-0 rounded-lg p-4 text-lg uppercase">
-                        <button id="hint-btn" class="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 glowing-button">GET HINT</button>
-                        <button id="submit-btn" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-4 px-8 rounded-lg transition-transform transform hover:scale-105 glowing-button">SUBMIT</button>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button id="new-practice-puzzle-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 rounded-lg transition">New Practice Puzzle</button>
-                    </div>
-                    <div id="message-box" class="mt-6 p-4 rounded-lg text-center opacity-0 transform -translate-y-4 transition-all">
-                        <p id="message-text" class="font-semibold"></p>
-                    </div>
-                </main>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right text-sm sm:text-lg">
+                                <div id="level-display" class="font-bold font-tech">LEVEL: <span>1</span></div>
+                                <div id="score-display" class="font-bold font-tech">SCORE: <span>0</span></div>
+                            </div>
+                            <button id="menu-btn" class="bg-gray-700 hover:bg-red-800/50 text-red-400 font-bold py-2 px-4 rounded-lg transition font-tech">MENU</button>
+                        </div>
+                    </header>
+                    <main class="p-4 sm:p-6">
+                        <div id="puzzle-container" class="bg-gray-800/50 p-6 rounded-lg border border-gray-700 mb-6 text-center min-h-[150px]">
+                            <h2 id="puzzle-title" class="text-lg font-semibold text-gray-400 mb-4"></h2>
+                            <p id="puzzle-content" class="text-xl sm:text-3xl text-emerald-300 font-tech tracking-widest break-words"></p>
+                            <p id="puzzle-hint" class="text-sm text-gray-500 mt-4 italic invisible"></p>
+                        </div>
+                        <div id="input-section" class="flex flex-col sm:flex-row items-center gap-4">
+                            <button id="skeleton-key-btn" title="Use Skeleton Key" class="hidden w-16 h-16 bg-gray-700 hover:bg-purple-700 text-purple-400 font-bold p-3 rounded-lg transition-transform transform hover:scale-105">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-full h-full"><path d="M13.5 6.22222V5C13.5 3.62222 14.6222 2.5 16 2.5C17.3778 2.5 18.5 3.62222 18.5 5V11.5H20.5V5C20.5 2.51111 18.4889 0.5 16 0.5C13.5111 0.5 11.5 2.51111 11.5 5V6.22222C10.5889 6.58889 10 7.46667 10 8.5V11.5H2V21.5H12V17.5H14V14.5H16V11.5H13.5V8.5C13.5 7.46667 12.5889 6.58889 11.5 6.22222H13.5Z"/></svg>
+                            </button>
+                            <input type="text" id="answer-input" placeholder="ENTER YOUR ANSWER..." class="custom-input font-tech w-full flex-grow bg-gray-700 text-white placeholder-gray-500 border-2 border-gray-600 focus:border-emerald-500 focus:ring-0 rounded-lg p-4 text-lg uppercase">
+                            <button id="hint-btn" class="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 glowing-button">GET HINT</button>
+                            <button id="submit-btn" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-4 px-8 rounded-lg transition-transform transform hover:scale-105 glowing-button">SUBMIT</button>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="new-practice-puzzle-btn" class="hidden bg-gray-700 hover:bg-gray-600 text-emerald-400 font-bold py-2 px-4 rounded-lg transition">New Practice Puzzle</button>
+                        </div>
+                        <div id="message-box" class="mt-6 p-4 rounded-lg text-center opacity-0 transform -translate-y-4 transition-all">
+                            <p id="message-text" class="font-semibold"></p>
+                        </div>
+                    </main>
+                </div>
             </div>
         </div>
         
