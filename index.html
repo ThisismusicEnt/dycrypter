@@ -390,11 +390,11 @@
     };
 
     const campaignPuzzles = [
-        { level: 1, type: 'caesar', question: 'AGENT', answer: 'DJHQW', hint: 'Shift by 3', points: 100 },
-        { level: 2, type: 'scramble', question: 'CIPHER', answer: 'CIPHER', hint: 'Unscramble the letters', points: 150 },
-        { level: 3, type: 'binary', question: 'CODE', answer: 'CODE', hint: '01000011 01001111 01000100 01000101', points: 200 },
-        { level: 4, type: 'math', question: '5 * 8 + 2', answer: '42', hint: 'Follow the order of operations.', points: 120 },
-        { level: 5, type: 'caesar', question: 'SECRET', answer: 'VHFUHW', hint: 'Shift by 3', points: 180 },
+        { level: 1, type: 'caesar', question: 'AGENT', answer: 'DJHQW', points: 100 },
+        { level: 2, type: 'scramble', question: 'CIPHER', answer: 'CIPHER', points: 150 },
+        { level: 3, type: 'binary', question: 'CODE', answer: 'CODE', points: 200 },
+        { level: 4, type: 'math', question: '5 * 8 + 2', answer: '42', points: 120 },
+        { level: 5, type: 'caesar', question: 'SECRET', answer: 'VHFUHW', points: 180 },
     ];
 
     const storeItems = [
@@ -409,6 +409,33 @@
         { type: 'caesar', word: 'ATTACK' }, { type: 'caesar', word: 'STEALTH' },
         { type: 'binary', word: 'SPY' }, { type: 'math' }
     ];
+
+    const hintDatabase = {
+        caesar: [
+            'This is a simple letter substitution cipher.',
+            'Every letter is shifted by the same amount.',
+            'Think about a famous Roman emperor.',
+            'The key is often a small number. Try 3.',
+            'Look for common single-letter words like "A" or "I".'
+        ],
+        scramble: [
+            'All the correct letters are there, just in the wrong order.',
+            'Try to identify the vowels and consonants first.',
+            'Look for common letter pairs like "TH", "ER", or "ING".',
+            'Write the letters down and rearrange them physically.'
+        ],
+        binary: [
+            'Each block of 8 numbers represents one character.',
+            'This is the ASCII representation of text.',
+            'You might need a binary-to-text converter.',
+            '01000001 is the binary code for the letter "A".'
+        ],
+        math: [
+            'Remember the order of operations (PEMDAS/BODMAS).',
+            'Multiplication and Division come before Addition and Subtraction.',
+            'Calculate what\'s inside the parentheses first... if there are any.'
+        ]
+    };
 
     const achievements = [
         { id: 1, name: 'First Steps', description: 'Complete level 1.', criteria: (s) => s.player.level > 1 },
@@ -541,7 +568,7 @@
         state.player.hintsUsedThisLevel = 0;
         const puzzleData = campaignPuzzles.find(p => p.level === level);
         if (!puzzleData) {
-            displayPuzzle({ title: 'CAMPAIGN COMPLETE!', content: 'You are a master agent!', hint: '' });
+            displayPuzzle({ title: 'CAMPAIGN COMPLETE!', content: 'You are a master agent!'});
             return;
         }
         let puzzle = { ...puzzleData };
@@ -559,7 +586,6 @@
         const generated = puzzleMaster[randomType.type](randomType.word || '');
         puzzle.question = generated.question;
         puzzle.answer = generated.answer;
-        puzzle.hint = `A random ${randomType.type} puzzle.`;
         state.currentPuzzle = puzzle;
         displayPuzzle(puzzle);
         navigateTo('game');
@@ -568,7 +594,8 @@
     function displayPuzzle(puzzle) {
         puzzleTitle.textContent = puzzle.level ? `LEVEL ${puzzle.level} - ${puzzle.type.toUpperCase()}` : puzzle.title;
         puzzleContent.textContent = puzzle.question || puzzle.content;
-        puzzleHint.textContent = puzzle.hint;
+        const hints = hintDatabase[puzzle.type] || [];
+        puzzleHint.textContent = hints.length > 0 ? hints[Math.floor(Math.random() * hints.length)] : 'No hint available for this type.';
         puzzleHint.classList.add('invisible');
         answerInput.value = '';
         state.player.stats.puzzlesAttempted = (state.player.stats.puzzlesAttempted || 0) + 1;
