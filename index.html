@@ -26,15 +26,18 @@
             50% { box-shadow: 0 0 20px 5px #10b981; }
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #111827;
-            /* New layout styles for robust centering */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden; /* Prevents scrollbars from appearing during transitions */
+            /* New layout styles for robust centering and scrolling */
+            display: grid;
+            place-items: center;
+            overflow-y: auto;
+            padding: 1rem;
         }
         .font-tech { font-family: 'Share Tech Mono', monospace; }
         .text-glow { text-shadow: 0 0 8px rgba(52, 211, 153, 0.7), 0 0 15px rgba(52, 211, 153, 0.5); }
@@ -42,10 +45,13 @@
         
         .page-container {
             display: grid; /* This allows pages to stack on top of each other */
+            grid-template-areas: "stack";
             place-items: center;
+            width: 100%;
+            max-width: 42rem; /* Equivalent to max-w-4xl */
         }
         .page { 
-            grid-area: 1 / 1;
+            grid-area: stack;
             transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
             width: 100%;
         }
@@ -129,10 +135,10 @@
 
     <div id="spotlight"></div>
 
-    <div class="page-container relative w-full max-w-4xl mx-auto p-4">
+    <div class="page-container">
 
         <!-- Splash Screen -->
-        <div id="splash-screen" class="page visible-page w-full max-w-4xl mx-auto text-center">
+        <div id="splash-screen" class="page visible-page w-full text-center">
             <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-emerald-400 text-glow font-tech splash-animation">ACCESSING MAINFRAME...</h1>
         </div>
         
@@ -1015,4 +1021,3 @@
     </script>
 </body>
 </html>
-
