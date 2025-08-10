@@ -26,18 +26,28 @@
             50% { box-shadow: 0 0 20px 5px #10b981; }
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: #111827; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #111827;
+            /* New layout styles for robust centering */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden; /* Prevents scrollbars from appearing during transitions */
+        }
         .font-tech { font-family: 'Share Tech Mono', monospace; }
         .text-glow { text-shadow: 0 0 8px rgba(52, 211, 153, 0.7), 0 0 15px rgba(52, 211, 153, 0.5); }
         .custom-input { caret-color: #34d399; }
         
         .page-container {
-            display: grid;
+            display: grid; /* This allows pages to stack on top of each other */
             place-items: center;
         }
         .page { 
             grid-area: 1 / 1;
             transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+            width: 100%;
         }
         
         /* Transition States */
@@ -115,7 +125,7 @@
 
     </style>
 </head>
-<body class="text-gray-200 flex items-center justify-center min-h-screen">
+<body class="text-gray-200">
 
     <div id="spotlight"></div>
 
@@ -155,11 +165,13 @@
         <!-- Mission Control Hub -->
         <div id="mission-hub" class="page hidden-page hide-default">
             <div class="animated-glowing-border">
-                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8 relative">
-                    <div id="badge-showcase" class="absolute top-6 left-6 flex gap-2">
-                        <!-- Showcase badges appear here -->
+                <div class="bg-gray-900 rounded-2xl shadow-2xl shadow-emerald-500/10 border border-gray-700 p-6 sm:p-8">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4">
+                        <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech text-center sm:text-left order-2 sm:order-1 flex-grow">MISSION CONTROL</h1>
+                        <div id="badge-showcase" class="flex gap-2 order-1 sm:order-2 mb-4 sm:mb-0 mx-auto sm:mx-0">
+                            <!-- Showcase badges appear here -->
+                        </div>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-bold text-emerald-400 text-glow font-tech text-center mb-4">MISSION CONTROL</h1>
                     <p id="hub-welcome-message" class="text-center text-gray-400 mb-8">Select your operation, Agent. Your score: <span id="hub-score">0</span></p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <button id="campaign-btn" class="hub-button">
@@ -746,7 +758,7 @@
             messageBox.classList.add('bg-red-500/20', 'text-red-300');
         }
 
-        messageBox.classList.remove('opacity-0', '-translate-y-4');
+        messageBox.classList.remove('opacity-0', 'translate-y-4');
         messageBox.classList.add('opacity-100', 'translate-y-0');
 
         setTimeout(() => {
@@ -961,6 +973,48 @@
     startGuestBtn.addEventListener('click', () => login(true));
     startAgentBtn.addEventListener('click', () => login(false));
     playerNameInput.addEventListener('keyup', (e) => e.key === 'Enter' && login(false));
+
+    campaignBtn.addEventListener('click', () => startGame('campaign'));
+    practiceBtn.addEventListener('click', () => startGame('practice'));
+    storeBtn.addEventListener('click', () => { renderStore(); navigateTo('store'); });
+    createBtn.addEventListener('click', openCodeForge);
+    profileBtn.addEventListener('click', openProfile);
+    settingsBtn.addEventListener('click', () => navigateTo('settings'));
+    
+    menuBtn.addEventListener('click', () => navigateTo('hub'));
+    backToHubBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('hub')));
+    
+    submitBtn.addEventListener('click', checkAnswer);
+    answerInput.addEventListener('keyup', (e) => e.key === 'Enter' && checkAnswer());
+    
+    hintBtn.addEventListener('click', getHint);
+    skeletonKeyBtn.addEventListener('click', useSkeletonKey);
+
+    newPracticePuzzleBtn.addEventListener('click', generatePracticePuzzle);
+    
+    forgeGenerateBtn.addEventListener('click', generateForgedCode);
+    
+    // Settings buttons
+    changeNameBtn.addEventListener('click', handleChangeName);
+    saveProgressBtn.addEventListener('click', () => {
+        saveState();
+        showMessage("Progress Saved Manually!", true);
+    });
+    deleteAccountBtn.addEventListener('click', () => {
+        deleteAccountBtn.classList.add('hidden');
+        deleteConfirmBtn.classList.remove('hidden');
+    });
+    deleteConfirmBtn.addEventListener('click', handleDeleteAccount);
+    exitSettingsBtn.addEventListener('click', () => navigateTo('profile'));
+
+    // Profile Tabs
+    tabInventory.addEventListener('click', () => switchProfileTab('inventory'));
+    tabAchievements.addEventListener('click', () => switchProfileTab('achievements'));
+
+
+    </script>
+</body>
+</html>
 
     campaignBtn.addEventListener('click', () => startGame('campaign'));
     practiceBtn.addEventListener('click', () => startGame('practice'));
