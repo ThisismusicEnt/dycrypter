@@ -1,0 +1,16 @@
+{
+  "name": "dycrypter",
+  "version": "1.0.0",
+  "description": "Decrypt game static site",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

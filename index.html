@@ -67,18 +67,30 @@
         .splash-animation { animation: fadeInOut 3s ease-in-out forwards; }
         
         .hub-button { 
-            @apply bg-gray-800/60 border border-gray-700 p-6 rounded-lg text-left transition-all duration-300 ease-in-out; 
+            background-color: rgba(31, 41, 55, 0.6);
+            border-width: 1px;
+            border-color: #374151;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            transition-property: all;
+            transition-duration: 300ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
         .hub-button:hover {
-            @apply -translate-y-2;
+            transform: translateY(-0.5rem);
         }
         .hub-button:hover .font-tech {
              text-shadow: 0 0 12px rgba(250, 204, 21, 0.8); /* yellow-400 glow */
         }
 
-        .disabled-button { @apply opacity-50 cursor-not-allowed; }
+        .disabled-button {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .disabled-button:hover { 
-            @apply border-gray-700 translate-y-0;
+            border-color: #374151;
+            transform: translateY(0);
         }
         .disabled-button:hover .font-tech {
             text-shadow: none;
