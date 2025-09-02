@@ -640,14 +640,17 @@
         });
     }
 
-    function handleCorrectAnswer() {
+    function handleCorrectAnswer(messagePrefix) {
         let pointsEarned = state.currentPuzzle.points;
         if (state.player.strikes < 4) {
             state.player.streak++;
             pointsEarned *= (1 + state.player.streak * 0.1);
         }
         state.player.score += Math.round(pointsEarned);
-        showMessage(`CORRECT! +${Math.round(pointsEarned)} POINTS`, true);
+        const successMsg = messagePrefix
+            ? `${messagePrefix} +${Math.round(pointsEarned)} POINTS`
+            : `CORRECT! +${Math.round(pointsEarned)} POINTS`;
+        showMessage(successMsg, true);
         
         gameWrapper.classList.add('flash-success');
         setTimeout(() => gameWrapper.classList.remove('flash-success'), 800);
@@ -696,9 +699,8 @@
     function useSkeletonKey() {
         if (state.player.inventory.skeleton_key > 0) {
             state.player.inventory.skeleton_key--;
-            showMessage('Skeleton Key Used. Level Bypassed.', true);
             checkAchievements(null, {action: 'use_key'});
-            handleCorrectAnswer();
+            handleCorrectAnswer('Skeleton Key Used. Level Bypassed!');
         }
     }
 
